@@ -9,7 +9,7 @@
 ?>
 <?php
     $coupon = $block->getCouponCode();
-    $coupons = explode(",", $coupon);
+    $coupons = explode(",",$coupon);
 ?>
 
 <div class="admin__field field-apply-coupon-code">
@@ -18,8 +18,7 @@
         <input type="text" class="admin__control-text" id="coupons:code" value="" name="coupon_code" />
         <?= $block->getButtonHtml(
                 __('Apply '),
-                'order.applyCoupon($F(\'coupons:code\'),\'' . $coupon . '\')'
-)
+                'order.applyCoupon($F(\'coupons:code\'),\'' . $coupon . '\')')
         ?>
         <?php if (empty($coupons)==false): ?>
             <?php foreach ($coupons as $c): ?>

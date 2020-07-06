@@ -32,10 +32,10 @@ class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
                 $cartQuote->getShippingAddress()->setCollectShippingRates(true);
                 if ($oldCouponCode) {
                     $oldCouponArray = explode(',', $oldCouponCode);
-                    if (trim($removeCouponValue) != '') {
-                        $oldCouponArray = implode(',', array_diff($oldCouponArray, [$removeCouponValue]));
+                    if (trim($removeCouponValue) != ''){
+                        $oldCouponArray = implode(',',array_diff($oldCouponArray,[$removeCouponValue]));
                         $cartQuote->setCouponCode($oldCouponArray)->collectTotals()->save();
-                    } else {
+                    }else{
                         $coupon = $this->couponFactory->create()->load($couponCode, 'code');
                         if ($coupon->getCode()) {
                             if (!in_array($couponCode, $oldCouponArray)) {

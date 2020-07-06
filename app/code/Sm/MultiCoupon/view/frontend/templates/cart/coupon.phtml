@@ -42,7 +42,7 @@
             <input type="hidden" id="remove-coupon-value" value="" name="remove_value">
             <h3>Applied Coupon:</h3>
             <?php foreach ($coupons as $c): ?>
-                    <p><?=$c ?><button type="button" data-value="<?= $c ?>" class=" action cancel"><?= /* @escapeNotVerified */ __('Remove') ?></button></p>
+                    <p><?=$c ?><button type="button" data-value="<?= $c ?>" class=" action cancel"> <i>remove</i></button></p>
             <?php endforeach; ?>
             <?php endif; ?>
         </form>
