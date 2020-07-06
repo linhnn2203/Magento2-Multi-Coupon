@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+<body>
+    <referenceBlock name="coupons">
+        <action method="setTemplate">
+            <argument name="template" xsi:type="string">Sm_MultiCoupon::order/create/coupons/form.phtml</argument>
+        </action>
+    </referenceBlock>
+    <referenceBlock name="order_create_coupons_form">
+        <action method="setTemplate">
+            <argument name="template" xsi:type="string">Sm_MultiCoupon::order/create/coupons/form.phtml</argument>
+        </action>
+    </referenceBlock>
+</body>
+</page>

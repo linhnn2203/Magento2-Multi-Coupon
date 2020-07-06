@@ -1,0 +1,42 @@
+<?php
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+// @codingStandardsIgnoreFile
+
+?>
+<?php
+    $coupon = $block->getCouponCode();
+    $coupons = explode(",", $coupon);
+?>
+
+<div class="admin__field field-apply-coupon-code">
+    <label class="admin__field-label"><span><?= /* @escapeNotVerified */ __('Apply Coupon Code') ?></span></label>
+    <div class="admin__field-control">
+        <input type="text" class="admin__control-text" id="coupons:code" value="" name="coupon_code" />
+        <?= $block->getButtonHtml(
+                __('Apply '),
+                'order.applyCoupon($F(\'coupons:code\'),\'' . $coupon . '\')'
+)
+        ?>
+        <?php if (empty($coupons)==false): ?>
+            <?php foreach ($coupons as $c): ?>
+                <p class="added-coupon-code">
+                    <span><?= $c ?></span>
+                    <a href="#" onclick="order.cancelCoupon(<?php echo '\'' . $c . '\''?>, <?php echo '\'' . $coupon . '\''?>); return false;" title="<?= $block->escapeHtmlAttr(__('Remove Coupon')) ?>"
+                       class="action-remove"><span><?= /* @escapeNotVerified */ __('Remove') ?></span></a>
+                </p>
+            <?php endforeach; ?>
+        <?php endif; ?>
+        <script>
+            require(["Sm_MultiCoupon/order/create/form"], function(){
+
+                order.overlay('shipping-method-overlay', <?php if ($block->getQuote()->isVirtual()): ?>false<?php else: ?>true<?php endif; ?>);
+                order.overlay('address-shipping-overlay', <?php if ($block->getQuote()->isVirtual()): ?>false<?php else: ?>true<?php endif; ?>);
+
+            });
+        </script>
+    </div>
+</div>
