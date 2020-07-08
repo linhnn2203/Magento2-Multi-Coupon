@@ -461,10 +461,16 @@ define([
         },
 
         applyCoupon : function(code,coupon){
-            var CouponArray = coupon.split(' ');
-            CouponArray.push(code);
+            var CouponArray = [];
+            if (coupon === '') {
+                CouponArray.push(code);
+            }
+            else {
+                CouponArray = coupon.split(' ');
+                CouponArray.push(code);
+            }
+            console.log(CouponArray)
             code = CouponArray.toString();
-            console.log(code);
             this.loadArea(['items', 'shipping_method', 'totals', 'billing_method'], true,
                 {'order[coupon][code]':code, reset_shipping: 0});
             this.orderItemChanged = false;

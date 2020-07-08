@@ -2,10 +2,22 @@
 
 namespace Sm\MultiCoupon\Controller\Cart;
 
+use Magento\Framework\Escaper;
+use Magento\Framework\Exception\LocalizedException;
+
+/**
+ * Multiple Coupons post handler.
+ *
+ * @category Smile
+ * @package  Smile\MultiCoupon
+ * @author   Romain Ruaud <romain.ruaud@smile.fr>
+ */
 class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
 {
     /**
      * Initialize coupon
+     *
+     * @SuppressWarnings(PHPMD.ElseExpression)
      *
      * @return \Magento\Framework\Controller\Result\Redirect
      * @SuppressWarnings(PHPMD.CyclomaticComplexity)
@@ -13,37 +25,39 @@ class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
      */
     public function execute()
     {
-        $couponCode = $this->getRequest()->getParam('remove') == 1
-            ? ''
-            : trim($this->getRequest()->getParam('coupon_code'));
-        $cartQuote = $this->cart->getQuote();
+        $couponCode    = $this->getRequest()->getParam('remove') == 1 ? '' : trim($this->getRequest()->getParam('coupon_code'));
+        $cartQuote     = $this->cart->getQuote();
         $oldCouponCode = $cartQuote->getCouponCode();
+
         $codeLength = strlen($couponCode);
         if (!$codeLength && !strlen($oldCouponCode)) {
             return $this->_goBack();
         }
 
         try {
-            $removeCouponValue = $this->getRequest()->getParam('remove_value');
             $isCodeLengthValid = $codeLength && $codeLength <= \Magento\Checkout\Helper\Cart::COUPON_CODE_MAX_LENGTH;
-            $itemsCount = $cartQuote->getItemsCount();
-            $couponUpdate = $oldCouponCode;
+            $itemsCount        = $cartQuote->getItemsCount();
             if ($itemsCount) {
                 $cartQuote->getShippingAddress()->setCollectShippingRates(true);
+
                 if ($oldCouponCode) {
+                    $couponRemove   = $this->getRequest()->getParam('removeCouponValue');
                     $oldCouponArray = explode(',', $oldCouponCode);
-                    if (trim($removeCouponValue) != ''){
-                        $oldCouponArray = implode(',',array_diff($oldCouponArray,[$removeCouponValue]));
-                        $cartQuote->setCouponCode($oldCouponArray)->collectTotals()->save();
-                    }else{
-                        $coupon = $this->couponFactory->create()->load($couponCode, 'code');
+
+                    if ($couponRemove != "") {
+                        $oldCouponCode = implode(',', array_diff($oldCouponArray, [$couponRemove]));
+                        $cartQuote->setCouponCode($oldCouponCode)->collectTotals();
+                    } else {
+                        $couponUpdate = $oldCouponCode;
+                        $coupon       = $this->couponFactory->create();
+                        $coupon->load($couponCode, 'code');
+
                         if ($coupon->getCode()) {
                             if (!in_array($couponCode, $oldCouponArray)) {
                                 $couponUpdate = $oldCouponCode . ',' . $couponCode;
                             }
                         }
                         $cartQuote->setCouponCode($isCodeLengthValid ? $couponUpdate : '')->collectTotals();
-                        $cartQuote->setCouponCode($couponUpdate)->save();
                     }
                 } else {
                     $cartQuote->setCouponCode($isCodeLengthValid ? $couponCode : '')->collectTotals();
@@ -52,11 +66,12 @@ class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
             }
 
             if ($codeLength) {
-                $escaper = $this->_objectManager->get(\Magento\Framework\Escaper::class);
-                $coupon = $this->couponFactory->create()->load($couponCode, 'code');
+                $escaper = $this->_objectManager->get(Escaper::class);
+                $coupon  = $this->couponFactory->create();
+                $coupon->load($couponCode, 'code');
                 if (!$itemsCount) {
                     if ($isCodeLengthValid && $coupon->getId()) {
-                        $this->_checkoutSession->getQuote()->setCouponCode($couponCode)->save();
+                        $this->_checkoutSession->getQuote()->setCouponCode($oldCouponCode)->save();
                         $this->messageManager->addSuccessMessage(
                             __(
                                 'You used coupon code "%1".',
@@ -66,14 +81,13 @@ class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
                     } else {
                         $this->messageManager->addErrorMessage(
                             __(
-                                'The coupon code "%1" is not valid .',
+                                'The coupon code "%1" is not valid.',
                                 $escaper->escapeHtml($couponCode)
                             )
                         );
                     }
                 } else {
-                    $couponData = explode(",", $cartQuote->getCouponCode());
-                    if ($isCodeLengthValid && $coupon->getId()&& in_array($couponCode, $couponData)) {
+                    if ($isCodeLengthValid && $coupon->getId() && in_array($couponCode, explode(",", $cartQuote->getCouponCode()))) {
                         $this->messageManager->addSuccessMessage(
                             __(
                                 'You used coupon code "%1".',
@@ -81,9 +95,9 @@ class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
                             )
                         );
                     } else {
-                        $this->messageManager->addErrorMessage(
+                        $this->messageManager->addError(
                             __(
-                                'The coupon code "%1" is not valid .',
+                                'The coupon code "%1" is not valid.',
                                 $escaper->escapeHtml($couponCode)
                             )
                         );
@@ -92,7 +106,7 @@ class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
             } else {
                 $this->messageManager->addSuccessMessage(__('You canceled the coupon code.'));
             }
-        } catch (\Magento\Framework\Exception\LocalizedException $e) {
+        } catch (LocalizedException $e) {
             $this->messageManager->addErrorMessage($e->getMessage());
         } catch (\Exception $e) {
             $this->messageManager->addErrorMessage(__('We cannot apply the coupon code.'));

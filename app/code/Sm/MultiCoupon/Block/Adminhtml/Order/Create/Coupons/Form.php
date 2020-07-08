@@ -15,6 +15,6 @@ class Form extends \Magento\Sales\Block\Adminhtml\Order\Create\Coupons\Form
     public function getCouponCode()
     {
         return $this->getParentBlock()->getQuote()->getCouponCode();
-//        return array_filter(explode(",", $this->getParentBlock()->getQuote()->getCouponCode()));
+//        return array_filter($this->getParentBlock()->getQuote()->getCouponCode());
     }
 }

@@ -9,7 +9,8 @@
 ?>
 <?php
     $coupon = $block->getCouponCode();
-    $coupons = explode(",", $coupon);
+    $multicoupons = explode(",", $coupon);
+    $coupons = array_filter($multicoupons);
     var_dump($coupons);
 ?>
 
@@ -22,6 +23,7 @@
                 'order.applyCoupon($F(\'coupons:code\'),\'' . $coupon . '\')'
         )
         ?>
+
         <?php if (empty($coupons)==false): ?>
             <?php foreach ($coupons as $c): ?>
                 <p class="added-coupon-code">

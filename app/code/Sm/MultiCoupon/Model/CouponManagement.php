@@ -7,10 +7,10 @@
 
 namespace Sm\MultiCoupon\Model;
 
-use \Magento\Quote\Api\CouponManagementInterface;
 use Magento\Framework\Exception\CouldNotDeleteException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Quote\Api\CouponManagementInterface;
 use Magento\SalesRule\Model\Coupon;
 
 /**
@@ -44,9 +44,10 @@ class CouponManagement extends \Magento\Framework\Model\AbstractExtensibleModel 
         $quote = $this->quoteRepository->getActive($cartId);
         return $quote->getCouponCode();
     }
-    public function checkExistCoupon($couponCodeArray){
+    public function checkExistCoupon($couponCodeArray)
+    {
         foreach ($couponCodeArray as $c) {
-            if($this->getResource()->exists($c)== false) {
+            if ($this->getResource()->exists($c)== false) {
                 return false;
             }
         }
@@ -67,8 +68,8 @@ class CouponManagement extends \Magento\Framework\Model\AbstractExtensibleModel 
             throw new NoSuchEntityException(__('Cart isn\'t assigned to correct store'));
         }
         $quote->getShippingAddress()->setCollectShippingRates(true);
-        $couponCodeArray = explode(',',$couponCode);
-        if ($this->checkExistCoupon($couponCodeArray)){
+        $couponCodeArray = explode(',', $couponCode);
+        if ($this->checkExistCoupon($couponCodeArray)) {
             try {
                 $quote->setCouponCode($couponCode);
                 $this->quoteRepository->save($quote->collectTotals());
@@ -77,7 +78,7 @@ class CouponManagement extends \Magento\Framework\Model\AbstractExtensibleModel 
                     __("The coupon code couldn't be applied. Verify the coupon code and try again.")
                 );
             }
-        }else{
+        } else {
             throw new NoSuchEntityException(__("The coupon code doesn't exist. Verify the code and try again."));
         }
         if ($quote->getCouponCode() != $couponCode) {
