@@ -20,7 +20,7 @@
         <?= $block->getButtonHtml(
                 __('Apply '),
                 'order.applyCoupon($F(\'coupons:code\'),\'' . $coupon . '\')'
-)
+        )
         ?>
         <?php if (empty($coupons)==false): ?>
             <?php foreach ($coupons as $c): ?>
@@ -33,11 +33,10 @@
         <?php endif; ?>
         <script>
             require(["Sm_MultiCoupon/order/create/form"], function(){
-
                 order.overlay('shipping-method-overlay', <?php if ($block->getQuote()->isVirtual()): ?>false<?php else: ?>true<?php endif; ?>);
                 order.overlay('address-shipping-overlay', <?php if ($block->getQuote()->isVirtual()): ?>false<?php else: ?>true<?php endif; ?>);
-
             });
         </script>
     </div>
 </div>
+

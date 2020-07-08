@@ -4,17 +4,14 @@
  */
 
 define([
-    'jquery',
+    "jquery",
     'Magento_Ui/js/modal/confirm',
     'Magento_Ui/js/modal/alert',
-    'mage/template',
-    'text!Magento_Sales/templates/order/create/shipping/reload.html',
-    'text!Magento_Sales/templates/order/create/payment/reload.html',
-    'mage/translate',
-    'prototype',
-    'Magento_Catalog/catalog/product/composite/configure',
+    "mage/translate",
+    "prototype",
+    "Magento_Catalog/catalog/product/composite/configure",
     'Magento_Ui/js/lib/view/utils/async'
-], function (jQuery, confirm, alert, template, shippingTemplate, paymentTemplate) {
+], function(jQuery, confirm, alert){
 
     window.AdminOrder = new Class.create();
 
@@ -32,7 +29,7 @@ define([
             this.gridProducts   = $H({});
             this.gridProductsGift = $H({});
             this.billingAddressContainer = '';
-            this.shippingAddressContainer = '';
+            this.shippingAddressContainer= '';
             this.isShippingMethodReseted = data.shipping_method_reseted ? data.shipping_method_reseted : false;
             this.overlayData = $H({});
             this.giftMessageDataChanged = false;
@@ -42,19 +39,7 @@ define([
             this.isOnlyVirtualProduct = false;
             this.excludedPaymentMethods = [];
             this.summarizePrice = true;
-            this.shippingTemplate = template(shippingTemplate, {
-                data: {
-                    title: jQuery.mage.__('Shipping Method'),
-                    linkText: jQuery.mage.__('Get shipping methods and rates')
-                }
-            });
-            this.paymentTemplate = template(paymentTemplate, {
-                data: {
-                    title: jQuery.mage.__('Payment Method'),
-                    linkText: jQuery.mage.__('Get available payment methods')
-                }
-            });
-
+            this.timerId = null;
             jQuery.async('#order-items', (function(){
                 this.dataArea = new OrderFormArea('data', $(this.getAreaId('data')), this);
                 this.itemsArea = Object.extend(new OrderFormArea('items', $(this.getAreaId('items')), this), {
@@ -63,7 +48,7 @@ define([
                         if (typeof controlButtonArea != 'undefined') {
                             var buttons = controlButtonArea.childElements();
                             for (var i = 0; i < buttons.length; i++) {
-                                if (buttons[i].innerHTML.include(button.getLabel())) {
+                                if (buttons[i].innerHTML.include(button.label)) {
                                     return;
                                 }
                             }
@@ -183,51 +168,43 @@ define([
 
             var data = this.serializeData(container);
             data[el.name] = id;
-
-            this.resetPaymentMethod();
-            if (this.isShippingField(container) && !this.isShippingMethodReseted) {
+            if(this.isShippingField(container) && !this.isShippingMethodReseted){
                 this.resetShippingMethod(data);
-            } else{
+            }
+            else{
                 this.saveData(data);
             }
         },
 
-        /**
-         * Checks if the field belongs to the shipping address.
-         *
-         * @param {String} fieldId
-         * @return {Boolean}
-         */
-        isShippingField: function (fieldId) {
-            if (this.shippingAsBilling) {
+        isShippingField : function(fieldId){
+            if(this.shippingAsBilling){
                 return fieldId.include('billing');
             }
-
             return fieldId.include('shipping');
         },
 
-        /**
-         * Checks if the field belongs to the billing address.
-         *
-         * @param {String} fieldId
-         * @return {Boolean}
-         */
-        isBillingField: function (fieldId) {
+        isBillingField : function(fieldId){
             return fieldId.include('billing');
         },
 
-        /**
-         * Binds events on container form fields.
-         *
-         * @param {String} container
-         */
-        bindAddressFields: function (container) {
-            var fields = $(container).select('input', 'select', 'textarea'),
-                i;
-
-            for (i = 0; i < fields.length; i++) {
-                jQuery(fields[i]).change(this.changeAddressField.bind(this));
+        bindAddressFields : function(container) {
+            var fields = $(container).select('input', 'select', 'textarea');
+            for(var i=0;i<fields.length;i++){
+                Event.observe(fields[i], 'change', this.triggerChangeEvent.bind(this));
             }
+        },
+
+        /**
+         * Calls changing address field handler after timeout to prevent multiple simultaneous calls.
+         *
+         * @param {Event} event
+         */
+        triggerChangeEvent: function (event) {
+            if (this.timerId) {
+                window.clearTimeout(this.timerId);
+            }
+
+            this.timerId = window.setTimeout(this.changeAddressField.bind(this), 500, event);
         },
 
         /**
@@ -241,8 +218,7 @@ define([
                 matchRes = field.name.match(re),
                 type,
                 name,
-                data,
-                resetShipping = false;
+                data;
 
             if (!matchRes) {
                 return;
@@ -258,31 +234,20 @@ define([
             }
             data = data.toObject();
 
-            if (type === 'billing' && this.shippingAsBilling) {
-                this.syncAddressField(this.shippingAddressContainer, field.name, field.value);
-                resetShipping = true;
-            }
-
-            if (type === 'shipping' && !this.shippingAsBilling) {
-                resetShipping = true;
-            }
-
-            if (resetShipping) {
+            if (type === 'billing' && this.shippingAsBilling || type === 'shipping' && !this.shippingAsBilling) {
                 data['reset_shipping'] = true;
             }
 
             data['order[' + type + '_address][customer_address_id]'] = null;
-            data['shipping_as_billing'] = +this.shippingAsBilling;
+            data['shipping_as_billing'] = jQuery('[name="shipping_same_as_billing"]').is(':checked') ? 1 : 0;
 
             if (name === 'customer_address_id') {
                 data['order[' + type + '_address][customer_address_id]'] =
                     $('order-' + type + '_address_customer_address_id').value;
             }
 
-            this.resetPaymentMethod();
-
             if (data['reset_shipping']) {
-                this.resetShippingMethod();
+                this.resetShippingMethod(data);
             } else {
                 this.saveData(data);
 
@@ -292,28 +257,7 @@ define([
             }
         },
 
-        /**
-         * Set address container form field value.
-         *
-         * @param {String} container - container ID
-         * @param {String} fieldName - form field name
-         * @param {*} fieldValue - form field value
-         */
-        syncAddressField: function (container, fieldName, fieldValue) {
-            var syncName;
-
-            if (this.isBillingField(fieldName)) {
-                syncName = fieldName.replace('billing', 'shipping');
-            }
-
-            $(container).select('[name="' + syncName + '"]').each(function (element) {
-                if (~['input', 'textarea', 'select'].indexOf(element.tagName.toLowerCase())) {
-                    element.value = fieldValue;
-                }
-            });
-        },
-
-        fillAddressFields: function(container, data){
+        fillAddressFields : function(container, data){
             var regionIdElem = false;
             var regionIdElemValue = false;
 
@@ -354,15 +298,10 @@ define([
                     fields[i].setValue(data[name] ? data[name] : '');
                 }
 
-                if (fields[i].changeUpdater) {
-                    fields[i].changeUpdater();
-                }
-
+                if (fields[i].changeUpdater) fields[i].changeUpdater();
                 if (name == 'region' && data['region_id'] && !data['region']){
                     fields[i].value = data['region_id'];
                 }
-
-                jQuery(fields[i]).trigger('change');
             }
         },
 
@@ -393,83 +332,46 @@ define([
             }
         },
 
-        /**
-         * Equals shipping and billing addresses.
-         *
-         * @param {Boolean} flag
-         */
-        setShippingAsBilling: function (flag) {
-            var data,
-                areasToLoad = ['billing_method', 'shipping_address', 'shipping_method', 'totals', 'giftmessage'];
-
+        setShippingAsBilling : function(flag){
+            var data;
+            var areasToLoad = ['billing_method', 'shipping_address', 'totals', 'giftmessage'];
             this.disableShippingAddress(flag);
-            data = this.serializeData(flag ? this.billingAddressContainer : this.shippingAddressContainer);
+            if(flag){
+                data = this.serializeData(this.billingAddressContainer);
+            } else {
+                data = this.serializeData(this.shippingAddressContainer);
+            }
+            areasToLoad.push('shipping_method');
             data = data.toObject();
             data['shipping_as_billing'] = flag ? 1 : 0;
             data['reset_shipping'] = 1;
             this.loadArea(areasToLoad, true, data);
         },
 
-        /**
-         * Replace shipping method area.
-         */
-        resetShippingMethod: function () {
-            if (!this.isOnlyVirtualProduct) {
-                $(this.getAreaId('shipping_method')).update(this.shippingTemplate);
+        resetShippingMethod : function(data){
+            var areasToLoad = ['billing_method', 'shipping_address', 'totals', 'giftmessage', 'items'];
+            if(!this.isOnlyVirtualProduct) {
+                areasToLoad.push('shipping_method');
+                areasToLoad.push('shipping_address');
             }
+
+            data['reset_shipping'] = 1;
+            this.isShippingMethodReseted = true;
+            this.loadArea(areasToLoad, true, data);
         },
 
-        /**
-         * Replace payment method area.
-         */
-        resetPaymentMethod: function () {
-            $(this.getAreaId('billing_method')).update(this.paymentTemplate);
-        },
-
-        /**
-         * Loads shipping options according to address data.
-         *
-         * @return {Boolean}
-         */
-        loadShippingRates: function () {
-            var addressContainer = this.shippingAsBilling ?
-                'billingAddressContainer' :
-                'shippingAddressContainer',
-                data = this.serializeData(this[addressContainer]).toObject();
-
-            data['collect_shipping_rates'] = 1;
+        loadShippingRates : function(){
             this.isShippingMethodReseted = false;
-            this.loadArea(['shipping_method', 'totals'], true, data);
-
-            return false;
+            this.loadArea(['shipping_method', 'totals'], true, {collect_shipping_rates: 1});
         },
 
-        setShippingMethod: function(method) {
+        setShippingMethod : function(method){
             var data = {};
-
             data['order[shipping_method]'] = method;
-            this.loadArea([
-                'shipping_method',
-                'totals',
-                'billing_method'
-            ], true, data);
+            this.loadArea(['shipping_method', 'totals', 'billing_method'], true, data);
         },
 
-        /**
-         * Updates available payment
-         * methods list according to order data.
-         *
-         * @return boolean
-         */
-        loadPaymentMethods: function() {
-            var data = this.serializeData(this.billingAddressContainer).toObject();
-
-            this.loadArea(['billing_method','totals'], true, data);
-
-            return false;
-        },
-
-        switchPaymentMethod: function(method){
+        switchPaymentMethod : function(method){
             jQuery('#edit_form')
                 .off('submitOrder')
                 .on('submitOrder', function(){
@@ -562,16 +464,18 @@ define([
             var CouponArray = coupon.split(' ');
             CouponArray.push(code);
             code = CouponArray.toString();
+            console.log(code);
             this.loadArea(['items', 'shipping_method', 'totals', 'billing_method'], true,
-                    {'order[coupon][code]':code, reset_shipping: 0});
+                {'order[coupon][code]':code, reset_shipping: 0});
             this.orderItemChanged = false;
         },
+
         cancelCoupon : function(code,coupon){
-                    var coupArr = coupon.split(',');
-                    coupArr = coupArr.filter( val => val !== code);
-                    coupon = coupArr.join(',');
-                    this.loadArea(['items', 'shipping_method', 'totals', 'billing_method'], true, {'order[coupon][code]':coupon, reset_shipping: 0});
-                    this.orderItemChanged = false;
+            var coupArr = coupon.split(',');
+            coupArr = coupArr.filter( val => val !== code);
+            coupon = coupArr.join(',');
+            this.loadArea(['items', 'shipping_method', 'totals', 'billing_method'], true, {'order[coupon][code]':coupon, reset_shipping: 0});
+            this.orderItemChanged = false;
         },
 
         addProduct : function(id){
@@ -1258,15 +1162,9 @@ define([
                 || this.excludedPaymentMethods.indexOf(this.paymentMethod) == -1);
         },
 
-        /**
-         * Serializes container form elements data.
-         *
-         * @param {String} container
-         * @return {Object}
-         */
-        serializeData: function (container) {
-            var fields = $(container).select('input', 'select', 'textarea'),
-                data = Form.serializeElements(fields, true);
+        serializeData : function(container){
+            var fields = $(container).select('input', 'select', 'textarea');
+            var data = Form.serializeElements(fields, true);
 
             return $H(data);
         },
@@ -1286,12 +1184,8 @@ define([
 
         submit : function()
         {
-            var $editForm = jQuery('#edit_form');
-
-            if ($editForm.valid()) {
-                $editForm.trigger('processStart');
-                $editForm.trigger('submitOrder');
-            }
+            jQuery('#edit_form').trigger('processStart');
+            jQuery('#edit_form').trigger('submitOrder');
         },
 
         _realSubmit: function () {
@@ -1551,10 +1445,8 @@ define([
             node.update('<span>' + this._label + '</span>');
             content[position] = node;
             Element.insert(element, content);
-        },
-
-        getLabel: function(){
-            return this._label;
         }
     };
+
 });
+

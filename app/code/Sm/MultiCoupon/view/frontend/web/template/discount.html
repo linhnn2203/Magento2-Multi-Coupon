@@ -43,7 +43,7 @@
                 <h4>Applied Coupon</h4>
                 <!-- ko foreach: couponCode().split(',') -->
                 <p><!-- ko text: $data --><!-- /ko -->
-                    <a class="action action-cancel" data-bind="click: $parent.cancel.bind($data,$data)"> Cancel</a>
+                    <a class="action-remove" data-bind="click: $parent.cancel.bind($data,$data)"> Cancel</a>
                 </p>
                 <!--/ko-->
             </div>
