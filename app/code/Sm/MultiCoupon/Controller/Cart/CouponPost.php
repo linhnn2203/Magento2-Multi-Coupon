@@ -5,13 +5,6 @@ namespace Sm\MultiCoupon\Controller\Cart;
 use Magento\Framework\Escaper;
 use Magento\Framework\Exception\LocalizedException;
 
-/**
- * Multiple Coupons post handler.
- *
- * @category Smile
- * @package  Smile\MultiCoupon
- * @author   Romain Ruaud <romain.ruaud@smile.fr>
- */
 class CouponPost extends \Magento\Checkout\Controller\Cart\CouponPost
 {
     /**

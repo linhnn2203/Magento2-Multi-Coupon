@@ -1,7 +1,7 @@
 var config = {
     map: {
         '*': {
-            discountCode: 'Sm_MultiCoupon/js/discount-codes'
+            smileMultiCoupons: 'Sm_MultiCoupon/js/multicoupon'
         }
     }
 };

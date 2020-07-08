@@ -1,7 +1,4 @@
 <?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
-    <preference for="Magento\Checkout\Block\Cart\Coupon" type="Sm\MultiCoupon\Block\Cart\Coupon" />
-    <preference for="Magento\Checkout\Controller\Cart\CouponPost" type="Sm\MultiCoupon\Controller\Cart\CouponPost" />
-    <preference for="Magento\Quote\Model\CouponManagement" type="Sm\MultiCoupon\Model\CouponManagement" />
-    <preference for="Magento\SalesRule\Model\ResourceModel\Rule\Collection" type="Sm\MultiCoupon\Model\ResourceModel\Rule\Collection"/>
+    <preference for="Magento\SalesRule\Model\Quote\Discount" type="Sm\MultiCoupon\Model\Quote\Discount" />
 </config>
